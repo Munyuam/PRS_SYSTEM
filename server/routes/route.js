@@ -7,8 +7,9 @@ router.get('/', function(req, res) {
 
 router.get('/api', function(req, res){
     res.json({
-        message: "response is working",
-        data: [1,3,3]
+    "data": [
+        { "id": 1, "name": "Example" }
+    ]
     }
     )
 })
