@@ -8,10 +8,15 @@ router.get('/', function(req, res) {
 router.get('/api', function(req, res){
     res.json({
     "data": [
-        { "id": 1, "name": "Example" }
+        { "id": 500, "name": "This site is under constructions" }
     ]
     }
     )
+})
+
+router.get('/login', function(req, res){
+    res.json()
+    
 })
 
 module.exports = router;

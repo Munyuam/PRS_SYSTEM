@@ -1,9 +1,14 @@
 import React from 'react'
+import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar';
+import Dboard from '../components/Dboard';
 
 function Administration() {
   return (
     <div>
-         <p>administration</p>   
+        <Sidebar/>
+        <Navbar/>
+        <Dboard/>
     </div>
   )
 }

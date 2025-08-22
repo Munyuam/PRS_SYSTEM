@@ -1,4 +1,4 @@
-import Home from "../Home";
+// import Home from "../Home";
 import Login from "../Login"
 import Administration from "../department/Administration";
 import Management from "../department/Management";
@@ -6,12 +6,13 @@ import Studio from "../department/Studio";
 import Warehouse from "../department/Warehouse";
 import Workshop from "../department/Workshop";
 import Notfound from "../errors/Notfound";
+import ServerError from "../errors/ServerError";
 
 
 const routes = [
     {
         path : '/',
-        component : <Home/>
+        component : <ServerError/>
     },
     {
         path : '/Login',
@@ -35,6 +36,14 @@ const routes = [
     },
     {
         path : '/department/Workshop',
+        component : <Workshop/>
+    },
+    {
+        path : '/completed-tasks',
+        component : <Workshop/>
+    },
+     {
+        path : '/pendings',
         component : <Workshop/>
     },
     {
