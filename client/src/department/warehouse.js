@@ -18,7 +18,7 @@ function Warehouse() {
         if (
           result.sessionData &&
           result.sessionData.userid &&
-          result.sessionData.department_name === "warehouse"
+          result.sessionData.department_name === "Warehouse"
         ) {
           setUser(result.sessionData.username);
           setError(null);

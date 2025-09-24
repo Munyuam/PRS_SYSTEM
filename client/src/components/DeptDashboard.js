@@ -29,7 +29,7 @@ return (
               <h3 className="text-lg font-semibold text-gray-800 mb-2">PROJECT STATUS</h3>
               <p className="text-gray-600 mb-4">Track progress of ongoing projects</p>
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm"
-                onClick={locator.getCompleted_projects}
+                onClick={locator.getProject_status}
               >
                 Check Status
               </button>

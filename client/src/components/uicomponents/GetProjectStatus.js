@@ -1,82 +1,172 @@
 import ProgressBar from "@ramonak/react-progress-bar";
-import React from "react";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Notyf } from "notyf";
-import { useState } from "react";
-import { dateFormat, getProgress, getStageName, newproject } from "../../utils/globalutils";
+import { dateFormat, getProgress, getStageName } from "../../utils/globalutils";
 
 function GetProjectStatus() {
-    const notf = new Notyf();
+  const [statuses, setStatuses] = useState([]);
+  const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const notf = new Notyf();
 
-    const [statuses,setStatuses] = useState([]);
+  const LoadProjectStatus = async () => {
+    try {
+      const response = await fetch("/getProjectStatus", { method: "GET" });
 
-    const LoadProjectStatus = async () => {
-        try {
-            const response = await fetch('/getProjectStatus', {
-                method: 'GET'  
-            });
+      if (response.ok) {
+        const data = await response.json();
 
-            if (response.ok) {
-                const statuses = await response.json();
-                const activeprojects = statuses.filter((item) => {
-                    return item.status !== "dropped"
-                })
-                setStatuses(activeprojects)
-            } else {
-                notf.error(`Something broke while loading your statuses: ${response.status} ${response.statusText}`);
-                console.error(`Failed to load statuses: ${response.status} ${response.statusText}`);
-            }
-        } catch (error) {
-            notf.error(`Network error: ${error.message}`);
-            console.error('Network error loading statuses:', error);
+        if (Array.isArray(data)) {
+          const activeprojects = data.filter((item) => item.status !== "dropped");
+          setStatuses(activeprojects);
+        } else {
+          setMessage(data);
         }
+      } else {
+        notf.error("Failed to load project status");
+      }
+    } catch (error) {
+      notf.error(`Network error: ${error.message}`);
+      console.error("Network error loading statuses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateStatus = async (status, jobcardno, assignedto) => {
+    const statusdata = {
+      status: status,
+      jobcardno: jobcardno,
+      assignedTo : assignedto
     };
 
-    useEffect(()=>{
-        LoadProjectStatus();
-    }, [])
+    try {
+      const response = await fetch("/updatestatus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(statusdata),
+      });
+
+      if (response.ok) {
+        const updatedstatus = await response.json();
+        if (updatedstatus.success) {
+          notf.success(`${status} was successful`);
+          LoadProjectStatus();
+        } else {
+          notf.error(`An error occurred during ${status}`);
+        }
+      }
+    } catch (error) {
+      notf.error(`Network error: ${error.message}`);
+      console.error("Network error updating status: ", error);
+    }
+  };
+
+  const renderActionButton = (item) => {
+    if (item.departmentName === "Studio") {
+      return item.status === "startdesign" && item.status !== "completedesign" ? (
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={() => updateStatus("completedesign", item.jobCardNo, 4)}
+        >
+          Complete Design
+        </button>
+      ) : (
+        <button
+          className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={() => updateStatus("startdesign", item.jobCardNo)}
+        >
+          Start Design
+        </button>
+      );
+    }
+
+    if (item.departmentName === "Workshop") {
+      return item.status === "startproduction" && item.status !== "completeproduction"? (
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={() => updateStatus("completeproduction", item.jobCardNo, 5)}
+        >
+          Complete Production
+        </button>
+      ) : (
+        <button
+          className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={() => updateStatus("startproduction", item.jobCardNo)}
+        >
+          Start Production
+        </button>
+      );
+    }
+
+    if (item.departmentName === "Warehouse") {
+      return item.status === "completeproduction"  && item.status !== ''? (
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          onClick={() => updateStatus("completed", item.jobCardNo, 100)}
+        >
+          Deliver to Client
+        </button>
+      ) : (
+        <span> </span>
+      );
+    }
+
+    return <span className="text-gray-400 italic text-sm">Not assigned</span>;
+  };
+
+  useEffect(() => {
+    LoadProjectStatus();
+  }, []);
 
   return (
     <div className="px-6 py-8 bg-gray-50 max-w-[100%] ml-64">
       <h1 className="text-2xl font-bold mb-6">Project Status</h1>
-    {
-    statuses ? (
-      statuses.map((item) => {
-      return(
-        <div className="bg-white my-6 rounded-xl shadow-md p-6 flex flex-col md:flex-row md:justify-between md:items-start">
-        <div className="flex-1 md:pr-8">
-          <h2 className="text-lg font-semibold">{item.jobDetails}</h2>
-          <p className="text-sm text-gray-500">Client: {item.clientContactName}</p>
-          <p className="text-sm text-gray-500">
-            Job Card: <span className="font-medium">{item.jobCardNo}</span>
-          </p>
-          <p className="text-sm text-gray-500">Prepared by: {item.preparedBy}</p>
-          <p className="text-sm text-gray-500">Due: {dateFormat(item.deliveryDate)}</p>
 
-          <div className="mt-6 w-full">
-            <p className="text-sm font-medium text-gray-700 mb-1">Progress</p>
-            <ProgressBar
-              completed={getProgress(item.status)}          
-              bgColor="#6366F1"         
-              height="20px"             
-              width="100%"              
-              className="w-full"        
-            />
+      {loading ? (
+        <p className="text-gray-500 text-center">Loading project statuses...</p>
+      ) : statuses.length > 0 ? (
+        statuses.map((item) => (
+          <div
+            key={item.jobCardNo}
+            className="bg-white my-6 rounded-xl shadow-md p-6 flex flex-col md:flex-row md:justify-between md:items-start"
+          >
+            <div className="flex-1 md:pr-8">
+              <h2 className="text-lg font-semibold">{item.jobDetails}</h2>
+              <p className="text-sm text-gray-500">Client: {item.clientContactName}</p>
+              <p className="text-sm text-gray-500">
+                Job Card: <span className="font-medium">{item.jobCardNo}</span>
+              </p>
+              <p className="text-sm text-gray-500">Prepared by: {item.preparedBy}</p>
+              <p className="text-sm text-gray-500">Due: {dateFormat(item.deliveryDate)}</p>
+
+              <div className="mt-6 w-full">
+                <p className="text-sm font-medium text-gray-700 mb-1">Progress</p>
+                <ProgressBar
+                  completed={getProgress(item.status)}
+                  bgColor="#6366F1"
+                  height="20px"
+                  width="100%"
+                  className="w-full"
+                />
+              </div>
+
+              {renderActionButton(item)}
+            </div>
+
+            <div className="flex flex-col items-end mt-4 md:mt-0">
+              <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
+                {getStageName(item.status)}
+              </span>
+              <p className="text-gray-800 font-semibold">MWK: {Math.floor(item.totalCharge)}</p>
+              <p className="text-sm text-gray-500">Current: {item.departmentName}</p>
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-col items-end mt-4 md:mt-0">
-          <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
-           {getStageName(item.status)}
-          </span>
-          <p className="text-gray-800 font-semibold">MWK: {Math.floor(item.totalCharge)}</p>
-          <p className="text-sm text-gray-500">Current: {item.departmentName}</p>
-        </div>
-      </div>
-      )     
-      })
-      ):(
-      <div className="flex flex-col items-center justify-center mt-16">
+        ))
+      ) : (
+        <div className="flex flex-col items-center justify-center mt-16">
           <div className="w-12 h-12 flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -95,17 +185,12 @@ function GetProjectStatus() {
             </svg>
           </div>
           <p className="text-gray-500 mb-4">
-            No projects available for your department
+            {message
+              ? message
+              : "Access Denied to this resource or Department has no available projects"}
           </p>
-          <button
-            className="px-6 py-2 rounded-md bg-green-400 text-white hover:bg-green-500 transition"
-            onClick={newproject}
-          >
-            Create First Project
-          </button>
         </div>
-      )
-    }
+      )}
     </div>
   );
 }

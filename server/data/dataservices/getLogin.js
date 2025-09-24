@@ -21,7 +21,8 @@ const loginDetails = async (username, password) => {
                     fullname: user.full_name,
                     email: user.email,
                     role: user.role,
-                    department_name: depart.departName
+                    department_name: depart.departName,
+                    departId : depart.departmentID
                 };
             } else {
                 return {
@@ -30,7 +31,8 @@ const loginDetails = async (username, password) => {
                     fullname: user.full_name,
                     email: user.email,
                     role: user.role,
-                    department_name: "Department Not Found"
+                    department_name: "Department Not Found",
+                    departId: "Department number Not found"
                 };
             }
         } else {

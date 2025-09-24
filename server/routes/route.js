@@ -7,6 +7,7 @@ import approveProject from "../data/dataservices/approveProject.js";
 import rejectProject from "../data/dataservices/rejectProject.js";
 import getusers from "../data/dataservices/getUsers.js";
 import registerUser from "../data/dataservices/registerUser.js";
+import UpdateStatus from "../data/dataservices/updatstatus.js";
 
 const router = Router();
 
@@ -29,7 +30,8 @@ router.post("/login", async (req, res) => {
         req.session.email = users.email;
         req.session.role = users.role;
         req.session.department_name = users.department_name;
-
+        req.session.departId = users.departId;
+        
         req.session.save((err) => {
            
             if (err) {
@@ -62,7 +64,7 @@ router.post("/login", async (req, res) => {
 router.get('/Admin', async (req, res) => {
     const userID = req.session.userid;
     const userDepartment = req.session.department_name; 
-    const username = req.session.username;
+    const userDepartmentID = req.session.departId;
 
     if(!userID){
         return res.status(401).json({
@@ -88,6 +90,7 @@ router.get('/Management', async (req, res) => {
     const userID = req.session.userid;
     const userDepartment = req.session.department_name; 
     const username = req.session.username;
+    const userDepartmentID = req.session.department_Id;
 
     console.log(`user ID is =>` + userID + ` username is =>`+ username);
     
@@ -169,6 +172,37 @@ router.post('/rejectProject', async (req, res)=>{
 });
 
 
+router.post('/updatestatus', async (req, res) => {
+    
+    if(!req.body || typeof req.body !== 'object'){
+        return res.status(400).json({
+            success: false,
+            message: "Invalid data received"
+        })
+    }
+    const { status, jobcardno, assignedTo } = req.body;
+
+    if (!status || !jobcardno) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    const updatedstatus = await UpdateStatus(status, jobcardno, assignedTo || null);
+
+    if(updatedstatus.success){
+        res.status(200).json({
+            success: true
+        })
+    }else{
+        res.status(500).json(500)({
+            success:false
+        })
+    } 
+})
+
+
 router.post('/projectInit', async (req, res) => {
     if (!req.body || typeof req.body !== 'object') {
         return res.status(400).json({ success: false, message: "Invalid data received" });
@@ -202,29 +236,66 @@ router.post('/projectInit', async (req, res) => {
 });
 
 router.get('/getProjects', async (req, res) => {
-    
-    const projects = await loadProjects();
-    
-    if(typeof projects == 'object' && projects !== null){
-        res.json(projects);
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name; 
+    const username = req.session.username;
+    const userDepartmentID = req.session.departId;
+
+    console.log("The project department of user is => "+ userDepartmentID)
+    console.log("The userID of the user is => " + userID)
+    if(userDepartment && userID){
+        try {
+        const projects = await loadProjects();
+
+        const filteredProjects = projects.filter((p)=>{
+                return p.assignedTo == userDepartmentID
+        })
+
+        console.log(filteredProjects);
+        
+        if(filteredProjects.length > 0){
+            res.status(200).json(filteredProjects)
+        }else{
+            res.status(200).json("No project Assigned to this Project")
+        }
+
+    } catch (error) {
+        
+    }
     }else{
-        res.json('Failed to load projects from the database');
+        res.status(500).json("Access to this resource is restricted. Please Login")
     }
 });
 
 router.get('/getProjectStatus', async (req, res) => {
-    try {   
-        const projectStatus = await statuses();
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name; 
+    const username = req.session.username;
+   
+    if(userID && userDepartment){
+        try {   
+            const projectStatus = await statuses();
 
-        if(projectStatus.length > 0){
-             res.json(projectStatus)
-        }else{
-            json.status(500).json("No data was found");
-        }      
-    } catch (error) {
-        console.error('Error fetching statuses:', error);
-        res.status(500).json({ error: 'Failed to load statuses' });
+            console.log(projectStatus)
+
+            const filteredProjects = projectStatus.filter((project)=>{
+                return project.departmentName == userDepartment
+            })
+
+            if(filteredProjects.length > 0){
+                res.status(200).json(filteredProjects)
+            }else{
+                res.status(500).json("No projects available for your department");
+            }  
+
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+            res.status(500).json({ error: 'Failed to load statuses' });
+        }
+    }else{
+        res.status(500).json("Access to this resource is priviledged, login first")
     }
+
 });
 
 
