@@ -23,7 +23,6 @@ function Departments() {
         });
 
         setProjects(activeprojects);
-        console.log(activeprojects);
       } else {
         console.log("Error occurred while connecting to database");
       }

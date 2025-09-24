@@ -1,3 +1,5 @@
+const { Notyf } = require("notyf");
+const notf = new Notyf()
 
 const getProgress = (status) => {
     switch (status) {
@@ -116,7 +118,24 @@ const locator = {
 
       getWorkshop : ()=>{
         window.location.href ='/department/Workshop'
+      },
+
+      logout: async()=>{
+        try {
+          const response = await fetch("/logout", { method: "GET" });
+          if(response.ok){
+            notf.error("Logout Successfully");
+            setTimeout(()=>{
+              window.location.href = '/login'
+            }, 3000);
+            return  
+          }
+        }
+        catch(error){
+          notf.error(error)
+        }  
       }
+
 
 
 }

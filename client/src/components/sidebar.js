@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { locator } from '../utils/globalutils';
 
 function Sidebar() {
   const [deptOpen, setDeptOpen] = useState(false);
 
   const departments = [
-    {name: 'Departments', url: '/departments/all'},
+    {name: 'All Departments', url: '/departments/all'},
     {name: 'Administration', url: '/department/Administration'},
     {name: 'Management', url: '/department/Management'},
     {name: 'Studio', url: '/department/Studio'},
+    {name: 'Workshop', url: '/department/Workshop'},
     {name: 'Warehouse', url: '/department/Warehouse'},
-    {name: 'Workshop', url: '/department/Workshop'}
   ];
 
   return (
@@ -98,7 +99,7 @@ function Sidebar() {
       <div className='p-1 bg-red-500 m-3 rounded-lg'>
         <button className='flex items-center space-x-3 w-full px-4 py-3 text-white hover:bg-red-600 rounded-lg transition-colors'
         
-        onClick={(()=>{window.location.href = '/login'})}>
+        onClick={locator.logout}>
           <i className='bx bx-log-out text-xl'></i>
           <span>Logout</span>
         </button>

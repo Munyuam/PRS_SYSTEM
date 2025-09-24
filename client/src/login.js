@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState} from 'react';
 import {useNavigate} from 'react-router-dom'
 
 import { Notyf } from 'notyf';
@@ -54,7 +54,7 @@ function Login() {
 
   return (
     <div className='flex justify-center items-center bg-[#edf0f5] min-h-screen p-4'>
-      <div className='flex flex-col md:flex-row gap-6 bg-white w-full max-w-4xl rounded-3xl shadow-lg shadow-gray-400 md:w-[57%] md:p-12 p-6'>
+      <div className='flex flex-col md:flex-row gap-6 bg-white w-full max-w-4xl rounded-2xl shadow-md shadow-gray-400 md:w-[57%] md:p-12 p-6'>
         
         <div className='md:w-1/2 flex flex-col items-center md:items-start md:justify-center md:mt-0 mt-4 md:p-12 p-4'>
           <div className='w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4'>

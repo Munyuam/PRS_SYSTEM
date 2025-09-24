@@ -2,6 +2,7 @@ import React from 'react'
 import { getProgress,locator } from '../utils/globalutils';
 import ProgressBar from "@ramonak/react-progress-bar";
 import { useState, useEffect } from 'react';
+import 'notyf/notyf.min.css';
 
 function ManagerDashBoard() {
  const [projects, setProjects] = useState([]);
@@ -39,9 +40,6 @@ function ManagerDashBoard() {
     <div className="ml-64 flex min-h-screen bg-gray-50">
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-            <div className='w-full border border-none p-5'>
-                    <h1 className='text-4xl text-black mb-2 uppercase'><span className='font-bold'>HELLO!</span> Welcome Mwiza</h1>
-            </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">

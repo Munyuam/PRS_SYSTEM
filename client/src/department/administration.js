@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import AdminDashBoard from '../components/AdminDashBoard';
-
 import 'notyf/notyf.min.css';
 
 function Administration() { 
-  const [data, setData] = useState(null); 
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +20,6 @@ function Administration() {
 
       if (response.ok) {  
         if(result.sessionData && result.sessionData.userid && result.sessionData.department_name === 'Administration'){
-          setData(result.data);
           let _u = result.sessionData.username
           setUser(_u);
           setError(null);
@@ -70,7 +67,7 @@ function Administration() {
           <span className="text-xl font-semibold text-red-900">
             {error?.status || 401}
           </span>{" "}
-          | {error?.error || "Unauthorized access"}
+          | {error?.error || "Unauthorized access, You might not have Administrial Priviledges"}
         </p>
         <div className="mt-6 flex justify-center">
           <button 
@@ -89,11 +86,9 @@ function Administration() {
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-          {data && (
             <div className='w-full border border-none p-5 bg-gray-50 ml-64'>
               <h1 className='text-4xl text-black mb-2 uppercase'><span className='font-bold'>HELLO!</span> Welcome {user}</h1>
           </div>
-            )}
         <AdminDashBoard />
       </div>
     </div>

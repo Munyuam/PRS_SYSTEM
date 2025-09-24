@@ -31,6 +31,7 @@ router.post("/login", async (req, res) => {
         req.session.department_name = users.department_name;
 
         req.session.save((err) => {
+           
             if (err) {
                 return res.status(500).json({ error: 'Session error' });
             }
@@ -80,10 +81,6 @@ router.get('/Admin', async (req, res) => {
     res.json({
         success: true,
         sessionData: req.session,
-        data: {
-            name: 'mwizssajaskj',
-            dob: '21-09-2020'
-        }
     });
 });
 
@@ -92,6 +89,8 @@ router.get('/Management', async (req, res) => {
     const userDepartment = req.session.department_name; 
     const username = req.session.username;
 
+    console.log(`user ID is =>` + userID + ` username is =>`+ username);
+    
     if(!userID){
         return res.status(401).json({
             error: "Access to this Resource is Restricted. Please Login",
@@ -241,6 +240,7 @@ router.get("/getUsers", async (req, res) => {
 
 
 router.post('/registerUser', async (req, res) => {
+    
     if (!req.body || typeof req.body !== 'object') {
         return res.status(400).json({ error: "Invalid request format" });
     }
@@ -294,18 +294,83 @@ router.get('/Admin', async (req, res) => {
     res.json({
         success: true,
         sessionData: req.session,
-        data: {
-            name: 'mwizssajaskj',
-            dob: '21-09-2020'
-        }
     });
 
 });
 
 
-router.get('/Warehouse', async (req, res) => { 
-    res.send("Warehouse route");
+router.get('/studio', async (req, res) => { 
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name; 
+
+    if(!userID){
+        return res.status(401).json({
+            error: "Access to this Resource is Restricted. Please Login",
+            sessionData: req.session 
+        });
+    }
+
+    if(userDepartment !== 'Studio'){
+        return res.status(403).json({
+            error: "Access to this Resource is Restricted to Studio only",
+            sessionData: req.session
+        });
+    }
+
+    res.json({
+        success: true,
+        sessionData: req.session,
+    });
 });
+
+router.get('/warehouse', async (req, res) => { 
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name; 
+
+    if(!userID){
+        return res.status(401).json({
+            error: "Access to this Resource is Restricted. Please Login",
+            sessionData: req.session 
+        });
+    }
+
+    if(userDepartment !== 'Warehouse'){
+        return res.status(403).json({
+            error: "Access to this Resource is Restricted to Warehouse only",
+            sessionData: req.session
+        });
+    }
+
+    res.json({
+        success: true,
+        sessionData: req.session,
+    });
+});
+
+router.get('/workshop', async (req, res) => { 
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name; 
+
+    if(!userID){
+        return res.status(401).json({
+            error: "Access to this Resource is Restricted. Please Login",
+            sessionData: req.session 
+        });
+    }
+
+    if(userDepartment !== 'Workshop'){
+        return res.status(403).json({
+            error: "Access to this Resource is Restricted to Workshop only",
+            sessionData: req.session
+        });
+    }
+
+    res.json({
+        success: true,
+        sessionData: req.session,
+    });
+});
+
 
 router.get('/logout', async (req, res,next) => { 
     if(req.session){    

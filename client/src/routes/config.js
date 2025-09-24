@@ -14,11 +14,12 @@ import CompletedProjects from "../components/CompletedProjects";
 import Departments from "../department/Departments";
 import UserManagement from "../components/UserManagement";
 import AssignedProjects from "../components/AssignedProjects";
+import Home from "../Home";
 
 const routes = [
     {
         path : '/',
-        component : <ServerError/>
+        component : <Home/>
     },
     {
         path : '/Login',
