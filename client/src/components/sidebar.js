@@ -1,27 +1,74 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { locator } from '../utils/globalutils';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { locator, session } from '../utils/globalutils';
+import { Notyf } from 'notyf';
 
 function Sidebar() {
   const [deptOpen, setDeptOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const notfy = new Notyf();
+  const location = useLocation(); 
+  
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const sess = await session();
+        setUser(sess);
+      } catch (err) {
+        console.error("Session fetch failed:", err);
+      }
+    };
+    fetchSession();
+  }, []);
+
+  const departmentname = user?.departmentName;
+  let url = "/";
+  let status_url = () => window.location.href = "/";
+
+  if (departmentname) {
+    url = `/department/${departmentname}`;
+
+    switch (departmentname) {
+      case 'Administration':
+      case 'Management':
+        status_url = locator.getAdministrative_project_status;
+        break;
+      case 'Studio':
+        status_url = locator.getProject_status_studio;
+        break;
+      case 'Warehouse':
+        status_url = locator.getProject_status_warehouse;
+        break;
+      case 'Workshop':
+        status_url = locator.getProject_status_workshop;
+        break;
+      default:
+        status_url = () => window.location.href = "/";
+    }
+  }
 
   const departments = [
-    {name: 'All Departments', url: '/departments/all'},
-    {name: 'Administration', url: '/department/Administration'},
-    {name: 'Management', url: '/department/Management'},
-    {name: 'Studio', url: '/department/Studio'},
-    {name: 'Workshop', url: '/department/Workshop'},
-    {name: 'Warehouse', url: '/department/Warehouse'},
+    { name: 'All Departments', url: '/departments/all' },
+    { name: 'Administration', url: '/administration/project-status' },
+    { name: 'Management', url: '/management/project-status' },
+    { name: 'Studio', url: '/studio/project-status' },
+    { name: 'Workshop', url: '/workshop/project-status' },
+    { name: 'Warehouse', url: '/warehouse/project-status' },
   ];
 
+  const isStatusActive = () => {
+    if (typeof status_url === 'string') return location.pathname === status_url;
+    return false;
+  };
+
   return (
-    <div className='w-64 bg-gray-900 text-white flex flex-col h-screen fixed'>
+    <div className='fixed top-0 left-0 w-64 h-screen bg-gray-900 text-white flex flex-col z-50'>
+      
       <div className='p-6'>
         <div className='flex space-x-3 flex-row'>
           <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center'>
             <span className='text-white font-bold text-lg'>R</span>
           </div>
-          
           <div className='flex flex-col'>
             <h2 className='font-bold text-white text-xl'>PROJECT</h2>
             <h2 className='text-sm text-gray-300'>REPORT</h2>
@@ -29,31 +76,48 @@ function Sidebar() {
         </div>
       </div>
 
-      <nav className='flex-1 px-4 py-6 space-y-2'>
-        <NavLink 
-          to="/" 
-          className={({ isActive }) => 
-            `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'}`
+      <nav className='flex-1 px-4 py-6 space-y-2 overflow-y-auto'>
+        
+        <NavLink
+          to={url}
+          className={({ isActive }) =>
+            `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'
+            }`
           }
         >
           <i className='bx bx-home text-2xl'></i>
           <span>HOME</span>
         </NavLink>
 
-        <NavLink 
-          to="/p/project-status" 
-          className={({ isActive }) => 
-            `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'}`
-          }
-        >
-          <i className='bx bx-task text-2xl'></i>
-          <span>STATUS</span>
-        </NavLink>
+        {typeof status_url === "string" ? (
+          <NavLink
+            to={status_url}
+            className={({ isActive }) =>
+              `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors w-full ${
+                isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'
+              }`
+            }
+          >
+            <i className='bx bx-pulse text-2xl'></i>            
+            <span>STATUS</span>
+          </NavLink>
+        ) : (
+          <button
+            onClick={status_url}
+            className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors w-full text-left text-gray-300 hover:bg-gray-800"
+          >
+            <i className='bx bx-pulse text-2xl'></i> 
+            <span>STATUS</span>
+          </button>
+        )}
 
-        <NavLink 
-          to="/p/completed-projects" 
-          className={({ isActive }) => 
-            `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'}`
+        <NavLink
+          to="/p/completed-projects"
+          className={({ isActive }) =>
+            `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-800'
+            }`
           }
         >
           <i className='bx bx-check-circle text-2xl'></i>
@@ -82,6 +146,7 @@ function Sidebar() {
                 <NavLink
                   key={dept.url}
                   to={dept.url}
+                  end
                   className={({ isActive }) =>
                     `block px-4 py-2 text-sm rounded-lg transition-colors ${
                       isActive ? 'bg-[#3D5A73] text-white' : 'text-gray-300 hover:bg-gray-700'
@@ -94,16 +159,19 @@ function Sidebar() {
             </div>
           )}
         </div>
+
       </nav>
 
       <div className='p-1 bg-red-500 m-3 rounded-lg'>
-        <button className='flex items-center space-x-3 w-full px-4 py-3 text-white hover:bg-red-600 rounded-lg transition-colors'
-        
-        onClick={locator.logout}>
+        <button
+          className='flex items-center space-x-3 w-full px-4 py-3 text-white hover:bg-red-600 rounded-lg transition-colors'
+          onClick={locator.logout}
+        >
           <i className='bx bx-log-out text-xl'></i>
           <span>Logout</span>
         </button>
       </div>
+
     </div>
   );
 }

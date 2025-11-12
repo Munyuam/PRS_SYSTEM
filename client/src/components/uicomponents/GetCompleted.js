@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { dateFormat, getProgress, getStageName, newproject } from "../../utils/globalutils";
+import { dateFormat, formatCash, getProgress, getStageName, newproject } from "../../utils/globalutils";
 import ProgressBar from "@ramonak/react-progress-bar";
 import { Notyf } from "notyf";
 
@@ -9,14 +9,12 @@ function GetCompleted() {
 
   const LoadProjectStatus = async () => {
     try {
-      const response = await fetch('/getProjects', { method: 'GET' });
+      const response = await fetch('/getCompleted', { method: 'GET' });
 
       if (response.ok) {
-        const data = await response.json();
+        const completedProjects = await response.json();
 
-        const completedProjects = Array.isArray(data)
-          ? data.filter(item => item.projectStatus?.toLowerCase() === 'completed')
-          : [];
+        console.log("project data =>" + completedProjects);
 
         setcompleted(completedProjects);
       } else {
@@ -42,12 +40,12 @@ function GetCompleted() {
           <div key={index} className="bg-white my-6 rounded-xl shadow-md p-6 flex flex-col md:flex-row md:justify-between md:items-start">
             <div className="flex-1 md:pr-8">
               <h2 className="text-lg font-semibold">{item.jobDetails}</h2>
-              <p className="text-sm text-gray-500">Client: {item.clientName}</p>
+              <p className="text-sm text-gray-500">Client: {item.clientContactName}</p>
               <p className="text-sm text-gray-500">
                 Job Card: <span className="font-medium">{item.jobCardNo}</span>
               </p>
               <p className="text-sm text-gray-500">Prepared by: {item.preparedBy}</p>
-              <p className="text-sm text-gray-500">Due: {dateFormat(item.deiveryDate)}</p>
+              <p className="text-sm text-gray-500">Due: {dateFormat(item.deliveryDate)}</p>
 
               <div className="mt-6 w-full">
                 <p className="text-sm font-medium text-gray-700 mb-1">Progress</p>
@@ -65,7 +63,7 @@ function GetCompleted() {
               <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
                 {getStageName(item.projectStatus)}
               </span>
-              <p className="text-gray-800 font-semibold">MWK: {Math.floor(item.totalCharge)}</p>
+              <p className="text-gray-800 font-semibold">MWK: {formatCash(Math.floor(item.totalCharge))}</p>
             </div>
           </div>
         ))

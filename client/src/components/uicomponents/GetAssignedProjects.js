@@ -20,8 +20,12 @@ function GetAssignedProjects() {
         if (Array.isArray(data)) {
           const activeProjects = data.filter((item) => item.projectStatus !== "Notasks");
           setProjects(activeProjects);
-        } else {
-          setMessage(data);
+          setMessage(null);
+        } else if (typeof data === "object" && data !== null && "message" in data) {
+          setMessage(data.message); 
+          setProjects([]);
+          setMessage(JSON.stringify(data));
+          setProjects([]);
         }
       } else {
         notf.error("Failed to load assigned projects");

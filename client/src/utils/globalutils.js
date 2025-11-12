@@ -1,144 +1,251 @@
-const { Notyf } = require("notyf");
-const notf = new Notyf()
+import { Notyf } from 'notyf';
+import 'notyf/notyf.min.css'; 
+import Studio from '../department/Studio'; 
+const notf = new Notyf();
+
+const fetchUser = async () => {
+  try {
+    const user = await fetch('/getSession', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (user.ok) {
+      const response = await user.json();
+      console.log('session response:', response.username);
+      if (response.success) {
+        return response;
+      } else {
+        console.log('Error: No active Session');
+        return null;
+      }
+    } else {
+      console.log('an error occurred while fetching for user');
+      return null;
+    }
+  } catch (error) {
+    throw new Error('An error occurred: ', error);
+  }
+};
+
+function formatCash(amount) {
+    const num = Number(amount);
+
+    if (isNaN(num)) {
+        return "Invalid amount";
+    }
+
+    return num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+
+const session = async () => {
+  const users = await fetchUser();
+  if (!users) {
+    console.error('user can not be found!');
+    return null;
+  }
+  return {
+    success: true,
+    username: users.username,
+    departmentId: users.department_Id,
+    departmentName: users.departmentName,
+    email: users.email,
+    role: users.role,
+    userId: users.userId,
+  };
+};
 
 const getProgress = (status) => {
-    switch (status) {
-      case "pending":
-        return 25;
-      case "workstartedstudio":
-        return 50;
-      case "workedstartedworkshop":
-        return 75;
-      case "completed":
-        return 100;
-      default:
-        return 0;
-    }
+  switch (status) {
+    case 'pending':
+      return 5; 
+    case 'approved':
+      return 15
+    case 'startdesign':
+      return 30; 
+    case 'completedesign':
+      return 50; 
+    case 'startproduction':
+      return 55;
+    case 'completeproduction':
+      return 75; 
+    case 'completed':
+      return 100; 
+    case 'dropped':
+      return 0; 
+    default:
+      return 0;
+  }
 };
 
-const getRole = (department) =>{
-
-  switch(department){
-    case "Administration":
-      return "Admin";
-
-    case "Management":
-      return "Manager";
-
-    case "Studio":
-      return "Studio";
-      
-    case "Warehouse":
-      return "Warehouse";
-      
-    case "Workshop":
-      return "Worskhop";
-
-     default:
-        return "NO ROLE";
-    }
-}
+const getRole = (department) => {
+  switch (department) {
+    case 'Administration':
+      return 'Admin';
+    case 'Management':
+      return 'Manager';
+    case 'Studio':
+      return 'Studio';
+    case 'Warehouse':
+      return 'Warehouse';
+    case 'Workshop':
+      return 'Workshop'; 
+    default:
+      return 'NO ROLE';
+  }
+};
 
 const getStageName = (status) => {
-    switch (status) {
-      case "pending":
-        return "pending - not approved";
-      case "workstartedstudio":
-        return "Approved - studio work started";
-      case "workedstartedWorkshop":
-        return "Inprogress- Workshop Work Started";
-      case "completed":
-        return "completed";
-      default:
-        return "Unknown Stage";
+  switch (status) {
+    case 'pending':
+      return 'Pending — Waiting for approval';
+
+    case 'startdesign':
+      return 'Design Phase — Work Started Studio';
+
+    case 'completedesign':
+      return 'Design Completed — Awaiting Production';
+
+    case 'startproduction':
+      return 'Production Phase — In Progress';
+
+    case 'completeproduction':
+      return 'Production Completed — Ready for Delivery';
+
+    case 'completed':
+      return 'Delivered — Project Completed';
+
+    case 'dropped':
+      return 'Project Dropped / Cancelled';
+
+    default:
+      return 'Unknown Stage';
+  }
+};
+
+const viewStatus = () => {
+  window.location.href = '/p/project-status';
+};
+
+const newproject = async() => {
+  const user = await fetchUser();
+
+    if (!user) {
+      console.error('User not found. Try logging in');
+      return;
+    }
+    if (user.departmentName === 'Management' || user.departmentName === 'Administration') {
+      window.location.href = '/p/addproject';
+    } else {
+      notf.error('user has no access rights for this resource')
+      // alert('user has no access rights for this resource');
     }
 };
 
-function viewStatus() {
-    window.location.href = "/p/project-status";
-}
-
-function newproject() {
-    window.location.href = "/p/addproject";
-}
-
-function dateFormat (date){
-    const  d = new Date(date);
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-}
+const dateFormat = (date) => {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 const locator = {
-      addProject: ()=>{
-        window.location.href = '/p/addproject'
-      },
-      getProjects: ()=>{
-        window.location.href = '/p/projects'
-      },
+  addProject: () => {
+    window.location.href = '/p/addproject';
+  },
+  getProjects: () => {
+    window.location.href = '/p/projects';
+  },
+  getApprovals: () => {
+    window.location.href = '/approvals';
+  },
+  getUserManagement: () => {
+    window.location.href = '/admin/usermanagement';
+  },
+  getCompleted_projects: () => {
+    window.location.href = '/p/completed-projects';
+  },
 
-      getApprovals : ()=>{
-        window.location.href = '/approvals'
-      },
-
-      getUserManagement: ()=>{
-        window.location.href = '/admin/usermanagment'
-      },
-    
-      getCompleted_projects: ()=>{
-        window.location.href = '/p/completed-projects'
-      },
-
-
-      getProject_status : ()=>{
-        window.location.href = '/p/project-status'
-      },
-
-      getAssignedProjects: ()=>{
+  getAssignedProjects: ()=>{
         window.location.href = '/p/assigned-projects'
-      },
+  },
 
-      getDepartments: ()=>{
-        window.location.href = '/departments/all'
-      },
+  getAdministrative_project_status: async ()=>{
+     const user = await fetchUser();
+   
+    if (!user) {
+      console.error('User not found. Try logging in');
+      return;
+    }
 
-      getAdmininstration: ()=> {
-        window.location.href ='/department/Administration'
-      },
+    if (user.departmentName === 'Management' || user.departmentName === 'Administration') {
+      window.location.href = '/admin/project-status';
+    } else {
+      console.error('user has no access rights for this resource');
+    }
+  },  
+  
+  getProject_status_studio: async () => {
+    const user = await fetchUser();
+    if (!user) {
+      console.error('User not found. Try logging in');
+      return;
+    }
+    window.location.href = '/studio/project-status?department=studio';
+  },
 
-      getManagement: ()=> {
-        window.location.href ='/department/Management'
-      },
+  getProject_status_warehouse: async () => {
+    const user = await fetchUser();
+    if (!user) {
+      console.error('User not found. Try logging in');
+      return;
+    }
+    window.location.href = '/warehouse/project-status?department=warehouse';
+  },
 
-      getStudio: ()=> {
-        window.location.href ='/department/Studio'
-      },
+  getProject_status_workshop: async () => {
+    const user = await fetchUser();
+    if (!user) {
+      console.error('User not found. Try logging in');
+      return;
+    }
+    window.location.href = '/workshop/project-status?department=workshop';
+  },
 
-      getWarehouse: ()=>{
-        window.location.href ='/department/Warehouse'
-      },
+  getDepartments: () => {
+    window.location.href = '/departments/all';
+  },
+  getAdministration: () => {
+    window.location.href = '/department/Administration';
+  },
+  getManagement: () => {
+    window.location.href = '/department/Management';
+  },
+  getStudio: () => {
+    window.location.href = '/department/Studio';
+  },
+  getWarehouse: () => {
+    window.location.href = '/department/Warehouse';
+  },
+  getWorkshop: () => {
+    window.location.href = '/department/Workshop';
+  },
 
-      getWorkshop : ()=>{
-        window.location.href ='/department/Workshop'
-      },
-
-      logout: async()=>{
-        try {
-          const response = await fetch("/logout", { method: "GET" });
-          if(response.ok){
-            notf.error("Logout Successfully");
-            setTimeout(()=>{
-              window.location.href = '/login'
-            }, 3000);
-            return  
-          }
-        }
-        catch(error){
-          notf.error(error)
-        }  
+  logout: async () => {
+    try {
+      const response = await fetch('/logout', { method: 'GET' });
+      if (response.ok) {
+        notf.success('Logout Successfully');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 3000);
       }
+    } catch (error) {
+      notf.error('Logout failed');
+    }
+  },
+};
 
-
-
-}
-
-module.exports = {getProgress, locator, newproject, getStageName, getRole, dateFormat, viewStatus}
-
+export { getProgress, locator, newproject, getStageName, getRole, formatCash,dateFormat, viewStatus, session, fetchUser };

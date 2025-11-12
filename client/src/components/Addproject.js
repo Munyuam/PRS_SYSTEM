@@ -139,7 +139,7 @@ function Addproject() {
   return (
     <div className="flex">
       <div className="flex-1">
-      <Navbar/>
+      <Navbar hasSidebar={false}/>
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
           <div className="bg-white p-8 m-20 rounded-lg shadow-md w-full max-w-4xl">
             <h2 className="text-2xl font-bold text-center mb-6">NEW PROJECT</h2>
@@ -224,7 +224,7 @@ function Addproject() {
                     type="text"
                     name="overall_size"
                     value={formData.overall_size}
-                    placeholder='Enter the "text" overall size'
+                    placeholder='e.g 2 by 2'
                     onChange={handleChange}
                     className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                   />

@@ -5,7 +5,7 @@ const approveProject = async (jobCardNo) => {
   try {
     const sql = `
       UPDATE projectTasks 
-      SET assignedTo = ?, status = 'workstartedstudio' 
+      SET assignedTo = ?, status = 'approved' 
       WHERE jobCardNo = ?
     `;
     

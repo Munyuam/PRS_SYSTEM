@@ -83,8 +83,8 @@ function Administration() {
   }
   return (
     <div className="flex">
-      <Sidebar />
       <div className="flex-1">
+        <Sidebar />
         <Navbar />
             <div className='w-full border border-none p-5 bg-gray-50 ml-64'>
               <h1 className='text-4xl text-black mb-2 uppercase'><span className='font-bold'>HELLO!</span> Welcome {user}</h1>

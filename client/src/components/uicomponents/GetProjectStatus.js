@@ -1,30 +1,42 @@
 import ProgressBar from "@ramonak/react-progress-bar";
 import React, { useEffect, useState } from "react";
 import { Notyf } from "notyf";
-import { dateFormat, getProgress, getStageName } from "../../utils/globalutils";
+import { dateFormat, formatCash, getProgress, getStageName, session } from "../../utils/globalutils";
 
 function GetProjectStatus() {
   const [statuses, setStatuses] = useState([]);
   const [message, setMessage] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const notf = new Notyf();
 
   const LoadProjectStatus = async () => {
     try {
-      const response = await fetch("/getProjectStatus", { method: "GET" });
+      let query = window.location.search;
+      const response = await fetch(`/getProjectStatus${query}`);
 
       if (response.ok) {
         const data = await response.json();
 
         if (Array.isArray(data)) {
-          const activeprojects = data.filter((item) => item.status !== "dropped");
-          setStatuses(activeprojects);
+          const activeprojects = data.filter(item => item.status !== "dropped");
+
+          if (activeprojects.length === 0) {
+            setStatuses([]);
+            setMessage("No active projects at the moment.");
+          } else {
+            setStatuses(activeprojects);
+            setMessage(null);
+          }
         } else {
-          setMessage(data);
+          setStatuses([]);
+          setMessage(data || "No active projects available.");
         }
+
       } else {
         notf.error("Failed to load project status");
       }
+
     } catch (error) {
       notf.error(`Network error: ${error.message}`);
       console.error("Network error loading statuses:", error);
@@ -34,11 +46,7 @@ function GetProjectStatus() {
   };
 
   const updateStatus = async (status, jobcardno, assignedto) => {
-    const statusdata = {
-      status: status,
-      jobcardno: jobcardno,
-      assignedTo : assignedto
-    };
+    const statusdata = { status, jobcardno, assignedTo: assignedto };
 
     try {
       const response = await fetch("/updatestatus", {
@@ -53,19 +61,35 @@ function GetProjectStatus() {
         const updatedstatus = await response.json();
         if (updatedstatus.success) {
           notf.success(`${status} was successful`);
-          LoadProjectStatus();
+            // setMessage("Updating projects...");
+            setStatuses([]);
+            setLoading(true);
+
+          setTimeout(() => {
+            LoadProjectStatus();
+          }, 200);
         } else {
           notf.error(`An error occurred during ${status}`);
         }
       }
     } catch (error) {
       notf.error(`Network error: ${error.message}`);
-      console.error("Network error updating status: ", error);
+      console.error("Network error updating status:", error);
     }
   };
 
   const renderActionButton = (item) => {
-    if (item.departmentName === "Studio") {
+    if (!user) return null;
+
+    const userDept = user.departmentName?.toLowerCase();
+    const projectDept = item.departmentName?.toLowerCase();
+    const canAct = userDept === projectDept;
+
+    if (!canAct) {
+      return <span className="text-gray-400 italic text-sm">Not authorized</span>;
+    }
+
+    if (projectDept === "studio") {
       return item.status === "startdesign" && item.status !== "completedesign" ? (
         <button
           className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -76,15 +100,15 @@ function GetProjectStatus() {
       ) : (
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          onClick={() => updateStatus("startdesign", item.jobCardNo)}
+          onClick={() => updateStatus("startdesign", item.jobCardNo, 3)}
         >
           Start Design
         </button>
       );
     }
 
-    if (item.departmentName === "Workshop") {
-      return item.status === "startproduction" && item.status !== "completeproduction"? (
+    if (projectDept === "workshop") {
+      return item.status === "startproduction" && item.status !== "completeproduction" ? (
         <button
           className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           onClick={() => updateStatus("completeproduction", item.jobCardNo, 5)}
@@ -94,15 +118,15 @@ function GetProjectStatus() {
       ) : (
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          onClick={() => updateStatus("startproduction", item.jobCardNo)}
+          onClick={() => updateStatus("startproduction", item.jobCardNo,4)}
         >
           Start Production
         </button>
       );
     }
 
-    if (item.departmentName === "Warehouse") {
-      return item.status === "completeproduction"  && item.status !== ''? (
+    if (projectDept === "warehouse") {
+      return item.status === "completeproduction" ? (
         <button
           className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           onClick={() => updateStatus("completed", item.jobCardNo, 100)}
@@ -110,7 +134,7 @@ function GetProjectStatus() {
           Deliver to Client
         </button>
       ) : (
-        <span> </span>
+        <span></span>
       );
     }
 
@@ -118,6 +142,12 @@ function GetProjectStatus() {
   };
 
   useEffect(() => {
+    async function loadUser() {
+      const sess = await session();
+      setUser(sess);
+    }
+
+    loadUser();
     LoadProjectStatus();
   }, []);
 
@@ -160,7 +190,7 @@ function GetProjectStatus() {
               <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
                 {getStageName(item.status)}
               </span>
-              <p className="text-gray-800 font-semibold">MWK: {Math.floor(item.totalCharge)}</p>
+              <p className="text-gray-800 font-semibold">MWK: {formatCash(Math.floor(item.totalCharge))}</p>
               <p className="text-sm text-gray-500">Current: {item.departmentName}</p>
             </div>
           </div>
@@ -184,10 +214,8 @@ function GetProjectStatus() {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </div>
-          <p className="text-gray-500 mb-4">
-            {message
-              ? message
-              : "Access Denied to this resource or Department has no available projects"}
+          <p className="text-gray-500 mb-4 text-center">
+            {message || "No active projects available"}
           </p>
         </div>
       )}

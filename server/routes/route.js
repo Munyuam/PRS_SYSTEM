@@ -5,9 +5,11 @@ import loadProjects from "../data/dataservices/getProjects.js";
 import statuses from "../data/dataservices/getProjectStatus.js";
 import approveProject from "../data/dataservices/approveProject.js";
 import rejectProject from "../data/dataservices/rejectProject.js";
+import AdminStatus from "../data/dataservices/getAdminStatus.js";
 import getusers from "../data/dataservices/getUsers.js";
 import registerUser from "../data/dataservices/registerUser.js";
 import UpdateStatus from "../data/dataservices/updatstatus.js";
+import updateProfile from "../data/dataservices/updateProfile.js";
 
 const router = Router();
 
@@ -241,61 +243,124 @@ router.get('/getProjects', async (req, res) => {
     const username = req.session.username;
     const userDepartmentID = req.session.departId;
 
-    console.log("The project department of user is => "+ userDepartmentID)
-    console.log("The userID of the user is => " + userID)
-    if(userDepartment && userID){
-        try {
+    console.log("The project department of user is => " + userDepartmentID);
+    console.log("The userID of the user is => " + userID);
+
+    if (!userDepartment || !userID) {
+        return res.status(401).json("Access denied — Please login.");
+    }
+
+    try {
         const projects = await loadProjects();
 
-        const filteredProjects = projects.filter((p)=>{
-                return p.assignedTo == userDepartmentID
-        })
+        console.log("User ID:", userID);
+        console.log("User Department ID:", userDepartmentID);
 
-        console.log(filteredProjects);
-        
-        if(filteredProjects.length > 0){
-            res.status(200).json(filteredProjects)
-        }else{
-            res.status(200).json("No project Assigned to this Project")
+        // Filter projects for this department or admins (ID 1 or 2)
+        const filteredProjects = projects.filter(project => 
+            project.assignedTo == userDepartmentID || userDepartmentID == 1 || userDepartmentID == 2
+        );
+
+        // Sort projects: assignedTo == 100 goes last
+        filteredProjects.sort((a, b) => {
+            if (a.assignedTo === 100 && b.assignedTo !== 100) return 1;
+            if (a.assignedTo !== 100 && b.assignedTo === 100) return -1;
+            return a.assignedTo - b.assignedTo; // Optional secondary sort by assignedTo
+        });
+
+        console.log("These are the filtered and sorted Projects:", filteredProjects);
+
+        if (filteredProjects.length > 0) {
+            return res.status(200).json(filteredProjects);
+        } else {
+            return res.status(200).json({ message: "No project assigned to this department." });
         }
 
     } catch (error) {
-        
-    }
-    }else{
-        res.status(500).json("Access to this resource is restricted. Please Login")
+        console.error("Error loading projects:", error);
+        return res.status(500).json("Server error loading projects.");
     }
 });
 
+
+
 router.get('/getProjectStatus', async (req, res) => {
-    const userID = req.session.userid;
-    const userDepartment = req.session.department_name; 
-    const username = req.session.username;
-   
-    if(userID && userDepartment){
-        try {   
-            const projectStatus = await statuses();
+  const userID = req.session.userid;
+  const userDepartment = req.session.department_name;
+  const department = req.query.department?.toLowerCase();
 
-            console.log(projectStatus)
+  if (!userID || !userDepartment || !department) {
+    return res.status(403).json("Access denied. Login first");
+  }
 
-            const filteredProjects = projectStatus.filter((project)=>{
-                return project.departmentName == userDepartment
-            })
+  try {
+    const projectStatus = await statuses(department);
 
-            if(filteredProjects.length > 0){
-                res.status(200).json(filteredProjects)
-            }else{
-                res.status(500).json("No projects available for your department");
-            }  
+    return projectStatus.length > 0
+      ? res.status(200).json(projectStatus)
+      : res.status(404).json("No projects available for your department");
 
-        } catch (error) {
-            console.error('Error fetching statuses:', error);
-            res.status(500).json({ error: 'Failed to load statuses' });
-        }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json("Failed to load statuses");
+  }
+});
+
+router.get('/getAdminProjectStatus', async(req, res)=>{
+
+  const userID = req.session.userid;
+  const userDepartment = req.session.department_name;
+
+  if (!userID || !userDepartment) {
+    return res.status(403).json("Access denied. Login first");
+  }
+
+  try {
+    const AdminProjectStatus = await AdminStatus();
+
+    const AdminStatuses = Object.values(AdminProjectStatus)
+
+    if(AdminProjectStatus){
+        return res.status(200).json({
+            success:true, 
+            priviledgesStatuses: AdminStatuses  
+        })
     }else{
-        res.status(500).json("Access to this resource is priviledged, login first")
+        return res.status(500).json({
+            success:false,
+            message: 'An Error Occured while fetching data'
+        })
     }
 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json("Failed to load statuses");
+  }
+})
+
+router.get('/getCompleted', async (req, res) => {
+  try {
+    const projects = await loadProjects(); 
+
+    if (projects) {
+
+      const filteredProjects = projects.filter(
+        (project) => project.assignedTo === 100 && project.projectStatus === 'completed'
+      );
+
+      console.log("This is the filtered projects: "+filteredProjects);
+
+      res.status(200).json(filteredProjects);
+
+    } else {
+      console.error('Error: Expected an array of projects from loadProjects');
+      res.status(500).json({ error: 'Invalid data returned from loadProjects' });
+    }
+
+  } catch (error) {
+    console.error('Error fetching completed projects:', error);
+    res.status(500).json({ error: 'Failed to load completed projects' });
+  }
 });
 
 
@@ -442,10 +507,83 @@ router.get('/workshop', async (req, res) => {
     });
 });
 
+router.get('/geturl', async (req, res,next) => { 
+    const userID = req.session.userid;
+    const userDepartment = req.session.department_name;
+
+    if(userID && userDepartment){
+
+        res.status(200).json({
+            success: true,
+            sessionData: req.session
+        })
+    }else{
+       res.status(500).json({
+         success:false,
+        sessionData: null
+       })
+    }
+})
+
+router.post('/updateProfile', async (req, res) => {
+  const { username, email, departmentName, userId } = req.body;
+
+  if (!username || !email || !departmentName || !userId) {
+    console.log('Missing fields:', req.body);
+    return res.status(400).json({
+      success: false,
+      message: 'All fields are required.',
+    });
+  }
+
+  console.log(req.body);
+
+  try {
+    const updatedProfile = await updateProfile(username, email, departmentName, userId);
+
+    if (updatedProfile) {
+      console.log('Profile updated successfully:', updatedProfile);
+      return res.json({
+        success: true,
+        message: 'Profile updated successfully.',
+        user: updatedProfile,
+      });
+    } else {
+      console.log('Profile not found.');
+      return res.status(404).json({
+        success: false,
+        message: 'User not found.',
+      });
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Something occurred while updating the profile.',
+    });
+  }
+}); 
+
+
+router.get('/getSession', (req, res)=>{
+    if(!req.session){
+        console.log("No user Logins Found!");
+        return res.status(500).json({success: false, message: "no user Login found!"})
+    }else{
+        return res.status(200).json({
+            success: true,
+            userId: req.session.userid,
+            username: req.session.username,
+            email: req.session.email ,
+            role: req.session.role, 
+            departmentName: req.session.department_name ,
+            department_Id: req.session.departId 
+        })
+    }
+})
 
 router.get('/logout', async (req, res,next) => { 
     if(req.session){    
-
         req.session.destroy((error)=>{
             if(error){
                 return next(error)

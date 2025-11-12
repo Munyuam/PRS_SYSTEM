@@ -1,9 +1,6 @@
 import React from 'react'
 
-function Departments() {
-
-    
-
+function Departments() { 
   return (
     <div>Departments</div>
   )

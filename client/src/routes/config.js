@@ -6,6 +6,7 @@ import Warehouse from "../department/Warehouse";
 import Workshop from "../department/Workshop";
 import Notfound from "../errors/Notfound";
 import Approvals from "../components/Approvals";
+import AdminStatus from "../components/AdminStatus";
 import ServerError from "../errors/ServerError";
 import Addproject from "../components/Addproject";
 import DisplayProjects from "../components/DisplayProjects";
@@ -54,7 +55,7 @@ const routes = [
         component : <DisplayProjects/>
     },
     {
-        path : '/admin/usermanagment',
+        path : '/admin/usermanagement',
         component : <UserManagement/>
     },
     {
@@ -73,11 +74,35 @@ const routes = [
         path : '/approvals',
         component : <Approvals/>
     },
+
+    // Project Statuses of different projects...
     {
-        path : '/p/project-status',
+        path : '/admin/project-status',
+        component : <AdminStatus/>
+    }, 
+
+    {
+        path : '/management/project-status',
         component : <ProjectStatus/>
     },
-     {
+
+    {
+        path : '/administration/project-status',
+        component : <ProjectStatus/>
+    },
+    {
+        path : '/studio/project-status',
+        component : <ProjectStatus/>
+    },
+    {
+        path : '/workshop/project-status',
+        component : <ProjectStatus/>
+    },
+    {
+        path : '/warehouse/project-status',
+        component : <ProjectStatus/>
+    },
+    {
         path : '/pendings',
         component : <Workshop/>
     },

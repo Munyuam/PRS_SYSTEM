@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Notyf } from "notyf";
-import { getRole } from "../../utils/globalutils";
+import { getRole } from "../../utils/globalutils"; 
+import $ from "jquery";
+import "datatables.net-dt";
 
 function GetUserManagement() {
   const notyf = new Notyf();
@@ -26,16 +28,16 @@ function GetUserManagement() {
       if (response.ok) {
         const newUser = await response.json();
         console.log(newUser);
+
         notyf.success("User registered successfully");
-        getUsers(); 
+        getUsers();
 
         setFormData({
-            username: "",
-            fullName: "",
-            email: "",
-            role: 1, 
-        })
-        
+          username: "",
+          fullName: "",
+          email: "",
+          role: 1,
+        });
       } else {
         notyf.error("Error registering new user");
       }
@@ -63,11 +65,45 @@ function GetUserManagement() {
     getUsers();
   }, []);
 
+  useEffect(() => {
+  if (users.length > 0) {
+    const table = $("#userTable").DataTable({
+      destroy: true,
+      responsive: true,
+      pageLength: 6,
+
+      searching: true,
+      paging: true,
+      info: true,
+      lengthChange: false, 
+      language: {
+        search: "Search users:",
+        searchPlaceholder: "Type to search...",
+        
+        paginate: {
+          next: "Next →",
+          previous: "← Prev",
+        },
+        info: "_START_ - _END_ of _TOTAL_ users",
+        emptyTable: "No users available",
+      },
+
+      dom:
+        "<'flex justify-between items-center mb-4' f>" +
+        "<'w-full't>" +
+        "<'flex justify-between items-center mt-4' p i>",
+    });
+
+    return () => table.destroy();
+  }
+}, [users]);
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === "role" ? parseInt(value, 10) : value, // role is an integer
+      [name]: name === "role" ? parseInt(value, 10) : value,
     });
   };
 
@@ -143,7 +179,7 @@ function GetUserManagement() {
       </div>
 
       <div className="bg-white shadow rounded-xl overflow-hidden">
-        <table className="w-full text-left border-collapse">
+        <table id="userTable" className="display w-full text-left border-collapse">
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-3">Username</th>
