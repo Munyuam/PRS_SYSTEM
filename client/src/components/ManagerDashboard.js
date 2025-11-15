@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProgress, locator } from '../utils/globalutils';
+import { dateFormat, getProgress, locator } from '../utils/globalutils';
 import ProgressBar from "@ramonak/react-progress-bar";
 import 'notyf/notyf.min.css';
 
@@ -151,7 +151,7 @@ function ManagerDashBoard() {
                         Progress
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        Date Initialized
                       </th>
                     </tr>
                   </thead>
@@ -174,23 +174,20 @@ function ManagerDashBoard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">                 
                             <ProgressBar
                               completed={getProgress(project.projectStatus)}
                               bgColor="#4E49F2"
                               baseBgColor="#e5e7eb"
-                              height="15px"
+                              height="30"  
                               labelAlignment="center"
-                            />
+                              labelSize="20px"       
+                              borderRadius="10px" 
+                              />
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                          <button
-                            className="text-indigo-600 hover:text-indigo-900 mr-3"
-                            onClick={locator.getProject_status_manager}
-                          >
-                           View
-                          </button>
+                              {dateFormat(project.currentDate)}
                         </td>
                       </tr>
                     ))}

@@ -103,7 +103,8 @@ const getStageName = (status) => {
   switch (status) {
     case 'pending':
       return 'Pending — Waiting for approval';
-
+    case 'approved':
+      return 'approved — Waiting for Studio';
     case 'startdesign':
       return 'Design Phase — Work Started Studio';
 
