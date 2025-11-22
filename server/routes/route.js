@@ -35,6 +35,7 @@ router.post("/login", async (req, res) => {
         req.session.username = users.username;
         req.session.email = users.email;
         req.session.role = users.role;
+        req.session.status = users.status;
         req.session.department_name = users.department_name;
         req.session.departId = users.departId;
         
@@ -535,7 +536,7 @@ router.post('/updateProfile', async (req, res) => {
 
   const { username, email, departmentName, userId, status, fullName } = req.body;
 
-  if (!username || !email || !departmentName || !userId || !status) {
+  if (!username || !email || !departmentName || !userId) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
@@ -566,7 +567,8 @@ router.get('/getSession', (req, res)=>{
             success: true,
             userId: req.session.userid,
             username: req.session.username,
-            email: req.session.email ,
+            email: req.session.email,
+            status:req.session.status,
             role: req.session.role, 
             departmentName: req.session.department_name ,
             department_Id: req.session.departId 

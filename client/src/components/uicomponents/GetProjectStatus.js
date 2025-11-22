@@ -8,6 +8,7 @@ function GetProjectStatus() {
   const [message, setMessage] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [buttonLoading, setButtonLoading] = useState(null); 
   const notf = new Notyf();
 
   const LoadProjectStatus = async () => {
@@ -32,11 +33,9 @@ function GetProjectStatus() {
           setStatuses([]);
           setMessage(data || "No active projects available.");
         }
-
       } else {
         notf.error("Failed to load project status");
       }
-
     } catch (error) {
       notf.error(`Network error: ${error.message}`);
       console.error("Network error loading statuses:", error);
@@ -46,14 +45,14 @@ function GetProjectStatus() {
   };
 
   const updateStatus = async (status, jobcardno, assignedto) => {
+    setButtonLoading(jobcardno);
+
     const statusdata = { status, jobcardno, assignedTo: assignedto };
 
     try {
       const response = await fetch("/updatestatus", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(statusdata),
       });
 
@@ -61,13 +60,9 @@ function GetProjectStatus() {
         const updatedstatus = await response.json();
         if (updatedstatus.success) {
           notf.success(`${status} was successful`);
-            // setMessage("Updating projects...");
-            setStatuses([]);
-            setLoading(true);
-
-          setTimeout(() => {
-            LoadProjectStatus();
-          }, 200);
+          setStatuses([]);
+          setLoading(true);
+          setTimeout(() => LoadProjectStatus(), 200);
         } else {
           notf.error(`An error occurred during ${status}`);
         }
@@ -75,6 +70,8 @@ function GetProjectStatus() {
     } catch (error) {
       notf.error(`Network error: ${error.message}`);
       console.error("Network error updating status:", error);
+    } finally {
+      setButtonLoading(null);
     }
   };
 
@@ -85,24 +82,27 @@ function GetProjectStatus() {
     const projectDept = item.departmentName?.toLowerCase();
     const canAct = userDept === projectDept;
 
-    if (!canAct) {
-      return <span className="text-gray-400 italic text-sm">Not authorized</span>;
-    }
+    const isLoading = buttonLoading === item.jobCardNo;
+    const Spinner = <span className="loader border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></span>;
+
+    if (!canAct) return <span className="text-gray-400 italic text-sm">Not authorized</span>;
 
     if (projectDept === "studio") {
       return item.status === "startdesign" && item.status !== "completedesign" ? (
         <button
-          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          disabled={isLoading}
+          className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 w-full sm:w-auto"
           onClick={() => updateStatus("completedesign", item.jobCardNo, 4)}
         >
-          Complete Design
+          {isLoading ? Spinner : "Complete Design"}
         </button>
       ) : (
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          disabled={isLoading}
+          className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 w-full sm:w-auto"
           onClick={() => updateStatus("startdesign", item.jobCardNo, 3)}
         >
-          Start Design
+          {isLoading ? Spinner : "Start Design"}
         </button>
       );
     }
@@ -110,17 +110,19 @@ function GetProjectStatus() {
     if (projectDept === "workshop") {
       return item.status === "startproduction" && item.status !== "completeproduction" ? (
         <button
-          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          disabled={isLoading}
+          className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 w-full sm:w-auto"
           onClick={() => updateStatus("completeproduction", item.jobCardNo, 5)}
         >
-          Complete Production
+          {isLoading ? Spinner : "Complete Production"}
         </button>
       ) : (
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          onClick={() => updateStatus("startproduction", item.jobCardNo,4)}
+          disabled={isLoading}
+          className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 w-full sm:w-auto"
+          onClick={() => updateStatus("startproduction", item.jobCardNo, 4)}
         >
-          Start Production
+          {isLoading ? Spinner : "Start Production"}
         </button>
       );
     }
@@ -128,14 +130,13 @@ function GetProjectStatus() {
     if (projectDept === "warehouse") {
       return item.status === "completeproduction" ? (
         <button
-          className="bg-green-500 hover:bg-green-600 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          disabled={isLoading}
+          className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white m-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 w-full sm:w-auto"
           onClick={() => updateStatus("completed", item.jobCardNo, 100)}
         >
-          Deliver to Client
+          {isLoading ? Spinner : "Deliver to Client"}
         </button>
-      ) : (
-        <span></span>
-      );
+      ) : <span></span>;
     }
 
     return <span className="text-gray-400 italic text-sm">Not assigned</span>;
@@ -152,51 +153,57 @@ function GetProjectStatus() {
   }, []);
 
   return (
-    <div className="px-6 py-8 bg-gray-50 max-w-[100%] ml-64">
-      <h1 className="text-2xl font-bold mb-6">Project Status</h1>
+    <div className="px-4 sm:px-6 py-8 bg-gray-50 w-full lg:ml-64 lg:max-w-[calc(100%-16rem)]">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Project Status</h1>
 
       {loading ? (
         <p className="text-gray-500 text-center">Loading project statuses...</p>
       ) : statuses.length > 0 ? (
-        statuses.map((item) => (
-          <div
-            key={item.jobCardNo}
-            className="bg-white my-6 rounded-xl shadow-md p-6 flex flex-col md:flex-row md:justify-between md:items-start"
-          >
-            <div className="flex-1 md:pr-8">
-              <h2 className="text-lg font-semibold">{item.jobDetails}</h2>
-              <p className="text-sm text-gray-500">Client: {item.clientContactName}</p>
-              <p className="text-sm text-gray-500">
-                Job Card: <span className="font-medium">{item.jobCardNo}</span>
-              </p>
-              <p className="text-sm text-gray-500">Prepared by: {item.preparedBy}</p>
-              <p className="text-sm text-gray-500">Due: {dateFormat(item.deliveryDate)}</p>
+        <div className="space-y-6">
+          {statuses.map((item) => (
+            <div
+              key={item.jobCardNo}
+              className="bg-white rounded-xl shadow-md p-6 flex flex-col md:flex-row md:justify-between md:items-start gap-4"
+            >
+              <div className="flex-1 md:pr-4">
+                <h2 className="text-lg font-semibold">{item.jobDetails}</h2>
+                <p className="text-sm text-gray-500">Client: {item.clientContactName}</p>
+                <p className="text-sm text-gray-500">
+                  Job Card: <span className="font-medium">{item.jobCardNo}</span>
+                </p>
+                <p className="text-sm text-gray-500">Prepared by: {item.preparedBy}</p>
+                <p className="text-sm text-gray-500">Due: {dateFormat(item.deliveryDate)}</p>
 
-              <div className="mt-6 w-full">
-                <p className="text-sm font-medium text-gray-700 mb-1">Progress</p>
-                <ProgressBar
-                  completed={getProgress(item.status)}
-                  bgColor="#6366F1"
-                  height="20px"
-                  width="100%"
-                  className="w-full"
-                />
+                <div className="mt-4 w-full">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Progress</p>
+                  <ProgressBar
+                    completed={getProgress(item.status)}
+                    bgColor="#6366F1"
+                    height="20px"
+                    width="100%"
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {renderActionButton(item)}
+                </div>
               </div>
 
-              {renderActionButton(item)}
+              <div className="flex flex-col items-end mt-4 md:mt-0">
+                <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
+                  {getStageName(item.status)}
+                </span>
+                <p className="text-gray-800 font-semibold">
+                  MWK: {formatCash(Math.floor(item.totalCharge))}
+                </p>
+                <p className="text-sm text-gray-500">Current: {item.departmentName}</p>
+              </div>
             </div>
-
-            <div className="flex flex-col items-end mt-4 md:mt-0">
-              <span className="text-xs px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full mb-2">
-                {getStageName(item.status)}
-              </span>
-              <p className="text-gray-800 font-semibold">MWK: {formatCash(Math.floor(item.totalCharge))}</p>
-              <p className="text-sm text-gray-500">Current: {item.departmentName}</p>
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       ) : (
-        <div className="flex flex-col items-center justify-center mt-16">
+        <div className="flex flex-col items-center justify-center mt-16 text-center">
           <div className="w-12 h-12 flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -214,9 +221,7 @@ function GetProjectStatus() {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </div>
-          <p className="text-gray-500 mb-4 text-center">
-            {message || "No active projects available"}
-          </p>
+          <p className="text-gray-500 mb-4">{message || "No active projects available"}</p>
         </div>
       )}
     </div>

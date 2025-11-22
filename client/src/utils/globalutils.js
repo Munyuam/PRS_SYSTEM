@@ -44,15 +44,18 @@ function formatCash(amount) {
 
 const session = async () => {
   const users = await fetchUser();
+  
   if (!users) {
     console.error('user can not be found!');
     return null;
   }
+
   return {
     success: true,
     username: users.username,
     departmentId: users.department_Id,
     departmentName: users.departmentName,
+    status:users.status,
     email: users.email,
     role: users.role,
     userId: users.userId,
@@ -103,9 +106,11 @@ const getStageName = (status) => {
   switch (status) {
     case 'pending':
       return 'Pending — Waiting for approval';
+    
     case 'approved':
       return 'approved — Waiting for Studio';
-    case 'startdesign':
+    
+      case 'startdesign':
       return 'Design Phase — Work Started Studio';
 
     case 'completedesign':
@@ -128,8 +133,33 @@ const getStageName = (status) => {
   }
 };
 
-const viewStatus = () => {
-  window.location.href = '/p/project-status';
+
+const viewStatus = async (departmentName) => {
+  
+  if(!departmentName){
+    console.error('departname not specified');
+    return 
+  }
+
+  switch (departmentName) {
+    case 'Management':
+    case 'Administration':
+      return locator.getAdministrative_project_status();
+
+    case 'Studio':
+      return locator.getProject_status_studio();
+
+    case 'Workshop':
+      return locator.getProject_status_workshop();
+
+    case 'Warehouse':
+      return locator.getProject_status_warehouse();
+
+    default:
+      console.error("Unknown department:", departmentName);
+      window.location.href = '/p/project-status';
+  }
+
 };
 
 const newproject = async() => {
@@ -143,7 +173,6 @@ const newproject = async() => {
       window.location.href = '/p/addproject';
     } else {
       notf.error('user has no access rights for this resource')
-      // alert('user has no access rights for this resource');
     }
 };
 
@@ -168,7 +197,6 @@ const locator = {
   getCompleted_projects: () => {
     window.location.href = '/p/completed-projects';
   },
-
   getAssignedProjects: ()=>{
         window.location.href = '/p/assigned-projects'
   },
@@ -248,5 +276,6 @@ const locator = {
     }
   },
 };
+
 
 export { getProgress, locator, newproject, getStageName, getRole, formatCash,dateFormat, viewStatus, session, fetchUser };

@@ -29,21 +29,13 @@ function GetUserManagement() {
 
       if (response.ok) {
         const newUser = await response.json();
-        console.log(newUser);
-
         notyf.success("User registered successfully");
         getUsers();
-        setFormData({
-          username: "",
-          fullName: "",
-          email: "",
-          role: 1,
-        });
+        setFormData({ username: "", fullName: "", email: "", role: 1 });
       } else {
         notyf.error("Error registering new user");
       }
     } catch (error) {
-      console.log("Network Error " + error);
       notyf.error("Network Error");
     }
   };
@@ -63,66 +55,50 @@ function GetUserManagement() {
   };
 
   const getStatusBg = (status) => {
-      if (!status || status.trim() === "") return "bg-gray-300"; 
-
-      const normalized = status.toLowerCase();
-
-      if (normalized === "active") return "bg-green-500 text-white";
-      if (normalized === "inactive") return "bg-red-500 text-white";
-
-      return "bg-gray-400 text-white"; 
+    if (!status || status.trim() === "") return "bg-gray-300"; 
+    const normalized = status.toLowerCase();
+    if (normalized === "active") return "bg-green-500 text-white";
+    if (normalized === "inactive") return "bg-red-500 text-white";
+    return "bg-gray-400 text-white"; 
   };
-
 
   useEffect(() => {
     getUsers();
   }, []);
 
   useEffect(() => {
-  if (users.length > 0) {
-    const table = $("#userTable").DataTable({
-      destroy: true,
-      responsive: true,
-      pageLength: 6,
-
-      searching: true,
-      paging: true,
-      info: true,
-      lengthChange: false, 
-      language: {
-        search: "Search users:",
-        searchPlaceholder: "Type to search...",
-        
-        paginate: {
-          next: "Next →",
-          previous: "← Prev",
+    if (users.length > 0) {
+      const table = $("#userTable").DataTable({
+        destroy: true,
+        responsive: true,
+        pageLength: 6,
+        searching: true,
+        paging: true,
+        info: true,
+        lengthChange: false, 
+        language: {
+          search: "Search users:",
+          searchPlaceholder: "Type to search...",
+          paginate: { next: "Next →", previous: "← Prev" },
+          info: "_START_ - _END_ of _TOTAL_ users",
+          emptyTable: "No users available",
         },
-        info: "_START_ - _END_ of _TOTAL_ users",
-        emptyTable: "No users available",
-      },
+        dom:
+          "<'flex flex-col sm:flex-row justify-between items-center mb-4' f>" +
+          "<'w-full't>" +
+          "<'flex flex-col sm:flex-row justify-between items-center mt-4' p i>",
+      });
 
-      dom:
-        "<'flex justify-between items-center mb-4' f>" +
-        "<'w-full't>" +
-        "<'flex justify-between items-center mt-4' p i>",
-    });
-
-    return () => table.destroy();
-  }
-}, [users]);
-
+      return () => table.destroy();
+    }
+  }, [users]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === "role" ? parseInt(value, 10) : value,
-    });
+    setFormData({ ...formData, [name]: name === "role" ? parseInt(value, 10) : value });
   };
 
-  const handleClearForm = () => {
-    setFormData({ username: "", fullName: "", email: "", role: 1 });
-  };
+  const handleClearForm = () => setFormData({ username: "", fullName: "", email: "", role: 1 });
 
   const roleColors = {
     Admin: "bg-green-100 text-green-700",
@@ -133,11 +109,12 @@ function GetUserManagement() {
   };
 
   return (
-    <div className="p-6 w-[80%] mx-64">
-      <h2 className="text-2xl font-bold mb-6">User Management</h2>
+    <div className="p-4 sm:p-6 w-full max-w-[1200px] mx-auto">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-6">User Management</h2>
 
-      <div className="bg-white shadow rounded-xl p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      {/* Registration Form */}
+      <div className="bg-white shadow rounded-xl p-4 sm:p-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
             name="username"
@@ -179,23 +156,24 @@ function GetUserManagement() {
             <option value={5}>Warehouse</option>
           </select>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={registerUser}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 w-full sm:w-auto"
           >
             Add User
           </button>
           <button
             onClick={handleClearForm}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-700"
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-700 w-full sm:w-auto"
           >
             Clear Form
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow rounded-xl overflow-hidden">
+      {/* Users Table */}
+      <div className="bg-white shadow rounded-xl overflow-x-auto">
         <table id="userTable" className="display w-full text-left border-collapse">
           <thead className="bg-gray-100">
             <tr>
@@ -216,30 +194,29 @@ function GetUserManagement() {
                 <td className="px-4 py-3">
                   <span
                     className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      roleColors[getRole(user.departmentName)] ||
-                      "bg-gray-100 text-gray-700"
+                      roleColors[getRole(user.departmentName)] || "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {getRole(user.departmentName)}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-white">
-                 <button
-                      onClick={() => setEditingUser(user)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-md capitalize"
-                    >
-                      Edit
-                  </button>                
-                  </td>
-                    <td className={`px-4 py-3 text-sm capitalize ${getStatusBg(user.status)}`}>
-                    {user.status || "Invalid"}
-                  </td>
+                <td className="px-4 py-3 text-sm">
+                  <button
+                    onClick={() => setEditingUser(user)}
+                    className="bg-gray-500 text-white px-3 py-1 rounded-md capitalize w-full sm:w-auto"
+                  >
+                    Edit
+                  </button>
+                </td>
+                <td className={`px-4 py-3 text-sm capitalize ${getStatusBg(user.status)}`}>
+                  {user.status || "Invalid"}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      
+
       {editingUser && (
         <EditUser
           user={editingUser}

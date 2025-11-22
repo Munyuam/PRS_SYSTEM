@@ -1,9 +1,11 @@
 import pool from "../dbconnector.js";
 
 const updateProfile = async (username, email, department, userId, status, fullname = null) => {
+
   if (!username || !email || !department || !userId) {
     return { success: false, message: "All fields are required." };
   }
+
 
   const departmentID = await getDepartmentID(department);
   

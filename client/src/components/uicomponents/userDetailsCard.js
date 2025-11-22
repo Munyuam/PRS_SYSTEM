@@ -8,6 +8,7 @@ const UserDetailsCard = ({ onClose }) => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    status: "",
     departmentName: "",
   });
 
@@ -25,6 +26,7 @@ const UserDetailsCard = ({ onClose }) => {
         username: sess.username || "",
         email: sess.email || "",
         userId: sess.userId || "",
+        status: sess.status || "",
         departmentName: sess.departmentName || "",
       });
     } catch (error) {
@@ -128,20 +130,18 @@ const UserDetailsCard = ({ onClose }) => {
             />
           </div>
 
-         <div>
-            <label className="text-sm font-medium text-gray-700">Department</label>
-            <select
-              name="departmentName"
-              value={formData.departmentName}
+            <div>
+            {/* <label className="text-sm font-medium text-gray-700">status</label> */}
+            <input
+              type="text"
+              name="status"
+              value={formData.status}
               onChange={handleChange}
+              hidden
               className="mt-1 w-full bg-gray-100 border-gray-300 rounded-md p-2 text-gray-900 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={formData.departmentName}>{formData.departmentName}</option>
-              <option value="Studio">Studio</option>
-              <option value="Workshop">Workshop</option>
-              <option value="Warehouse">Warehouse</option>
-            </select>
+            />
           </div>
+
           {message && (
             <p className={`text-sm ${message.includes("successfully") ? "text-green-600" : "text-red-600"}`}>
               {message}

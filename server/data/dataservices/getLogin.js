@@ -28,6 +28,7 @@ const loginDetails = async (username, password) => {
       username: user.username,
       _passkey: user.password, 
       fullname: user.full_name,
+      status:user.status,
       email: user.email,
       role: user.role,
       department_name: department ? department.departName : "Department Not Found",

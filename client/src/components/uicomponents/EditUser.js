@@ -21,26 +21,32 @@ function EditUser({ user, onClose, onUpdate }) {
   };
 
   const handleUpdate = async () => {
-    console.log("formData is: =>",formData);
-    try {
-      const response = await fetch('/updateProfile', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
 
-      const data = await response.json();
+    let confirm = window.confirm("Are you sure you want to update profile")
 
-      if (data.success) {
-        notyf.success("Profile updated successfully");
-        onUpdate();
-        onClose();
-      } else {
-        notyf.error(data.message || "Error updating profile");
+    if(confirm){
+          try {
+        const response = await fetch('/updateProfile', {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          notyf.success("Profile updated successfully");
+          onUpdate();
+          onClose();
+        } else {
+          notyf.error(data.message || "Error updating profile");
+        }
+      } catch (err) {
+        notyf.error("Network error");
+        console.error(err);
       }
-    } catch (err) {
-      notyf.error("Network error");
-      console.error(err);
+    }else{
+      notyf.error("profile update denied!")
     }
   };
 

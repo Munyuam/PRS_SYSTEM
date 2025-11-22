@@ -106,6 +106,8 @@ const routes = [
         path : '/pendings',
         component : <Workshop/>
     },
+    
+// 404 Error page
     {
         path : '*',
         component : <Notfound/>
