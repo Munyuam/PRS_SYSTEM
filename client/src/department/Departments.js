@@ -74,10 +74,9 @@ function Departments() {
       <Navbar hasSidebar={true} />
       <Sidebar />
 
-      <div className="p-6 w-full lg:ml-64 transition-all">
+      <div className="p-6 w-[80%] lg:ml-64 transition-all">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Departments</h2>
 
-        {/* Responsive grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {departments.map((dept) => (
             <div 
