@@ -15,6 +15,7 @@ const getDepartmentMembers = async (departmentID) => {
     if (rows.length === 0) {
       return { success: false, message: "No active users found" };
     }
+    
 
     return {
       success: true,

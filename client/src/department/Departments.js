@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { locator, session } from '../utils/globalutils';
+import { Notyf } from 'notyf';
 
 function Departments() {
   const [user, setUser] = useState(null);
+  const notf = new Notyf();
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -23,7 +25,8 @@ function Departments() {
     if (department === 'management' || department === 'administration') {
       return locator.getAdministrative_project_status;
     }
-    return locator.getProject_status_manager;
+    
+    notf.error("user has no rights")
   }
 
   if (!user) {
@@ -74,7 +77,7 @@ function Departments() {
       <Navbar hasSidebar={true} />
       <Sidebar />
 
-      <div className="p-6 w-[80%] lg:ml-64 transition-all">
+      <div className="p-6 sm:w-screen md:w-[80%] lg:ml-64 transition-all">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Departments</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">

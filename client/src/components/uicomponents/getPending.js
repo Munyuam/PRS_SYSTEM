@@ -4,6 +4,9 @@ import { Notyf } from "notyf";
 
 function GetPending() {
   const [pendings, setPendings] = useState([]);
+  const [loadingApprove, setLoadingApprove] = useState(null);
+  const [loadingReject, setLoadingReject] = useState(null);
+
   const notf = new Notyf();
 
   const loadPendings = async () => {
@@ -39,6 +42,9 @@ function GetPending() {
 
   async function approveProject(proId, jobCardNo) {
     try {
+      
+      setLoadingApprove(proId);
+
       const response = await fetch("/approvProject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,13 +64,20 @@ function GetPending() {
       } else {
         notf.error("Error Getting the approved projects");
       }
-    } catch (error) {
+    } 
+    catch (error) {
       notf.error(`Network Error: ${error}`);
+    } 
+    finally{
+      setLoadingApprove(null);
     }
   }
 
   async function rejectProject(proId, jobCardNo) {
     try {
+      
+      setLoadingReject(proId);
+
       const response = await fetch("/rejectProject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,6 +99,8 @@ function GetPending() {
       }
     } catch (error) {
       notf.error(`Network Error: ${error}`);
+    }finally{
+      setLoadingReject(null);
     }
   }
 
@@ -193,29 +208,29 @@ function GetPending() {
                       px-4 py-2 
                       bg-red-500 text-white 
                       rounded-md hover:bg-red-600 
-                      transition
+                      transition disabled:opacity-50 disabled:cursor-not-allowed
                     "
-                    onClick={() =>
-                      rejectProject(item.projectID, item.jobCardNo)
-                    }
+                    disabled={loadingReject === item.projectID}
+                    onClick={() => rejectProject(item.projectID, item.jobCardNo)}
                   >
-                    Reject
+                    {loadingReject === item.projectID ? "Rejecting..." : "Reject"}
                   </button>
 
-                  <button
-                    className="
-                      w-full sm:w-auto
-                      px-4 py-2 
-                      bg-green-600 text-white 
-                      rounded-md hover:bg-green-700 
-                      transition
-                    "
-                    onClick={() =>
-                      approveProject(item.projectID, item.jobCardNo)
-                    }
-                  >
-                    Approve Project
-                  </button>
+
+                 <button
+                  className="
+                    w-full sm:w-auto
+                    px-4 py-2 
+                    bg-green-600 text-white 
+                    rounded-md hover:bg-green-700 
+                    transition disabled:opacity-50 disabled:cursor-not-allowed
+                  "
+                  disabled={loadingApprove === item.projectID}
+                  onClick={() => approveProject(item.projectID, item.jobCardNo)}
+                >
+                  {loadingApprove === item.projectID ? "Approving..." : "Approve Project"}
+                </button>
+
                 </div>
               </div>
             </div>

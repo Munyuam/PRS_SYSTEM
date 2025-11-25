@@ -6,9 +6,10 @@ const NotificationCard = ({ onClose }) => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [department, setDepartment] = useState(null);
   const [notifications, setNotifications] = useState([]);
+  const [totalCount, setTotalCount]= useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+      
     async function fetchNotifications() {
       try {
         const sess = await session();
@@ -21,15 +22,17 @@ const NotificationCard = ({ onClose }) => {
 
         if (data.success) {
           const formatted = data.notifications.map(n => ({
-            notificationID: n.notificationID,
-            title: n.notificationTitle,
-            message: n.notificationMessage,
-            time: new Date(n.notificationDate).toLocaleString(),
+            notificationID: n.ID,
+            title: n.title,
+            message: n.message,
+            count: n.count,
+            time: new Date(n.createdAt).toLocaleString(),
             icon: "bx-bell",
             read: n.read || false,
           }));
 
           setNotifications(formatted);
+          setTotalCount(data.count || formatted.length)
         } else {
           setNotifications([]);
           console.log(data.message);
@@ -41,59 +44,65 @@ const NotificationCard = ({ onClose }) => {
       }
     }
 
+  useEffect(() => {
     fetchNotifications();
   }, []);
 
   const markAsRead = async (notificationID) => {
-    try {
-      const response = await fetch("/markAsRead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notificationID }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setNotifications(prev =>
-          prev.map(n =>
-            n.notificationID === notificationID ? { ...n, read: true } : n
-          )
-        );
-      }
-    } catch (err) {
-      console.error("Failed to mark as read:", err);
-    }
-  };
+  try {
+    const response = await fetch("/markAsRead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificationID }),
+    });
 
-  const markAllAsRead = async () => {
-    try {
-      const response = await fetch("/markAllAsRead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ departmentID: department }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      }
-    } catch (err) {
-      console.error("Failed to mark all as read:", err);
+    const data = await response.json();
+    if (data.success) {
+      setNotifications(prev =>
+        prev.map(n =>
+          n.notificationID === notificationID ? { ...n, read: true } : n
+        )
+      );
+
+      fetchNotifications(); 
     }
-  };
+  } catch (err) {
+    console.error("Failed to mark as read:", err);
+  }
+};
+
+
+const markAllAsRead = async () => {
+  try {
+    const response = await fetch("/markAllAsRead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+      fetchNotifications();
+    }
+  } catch (err) {
+    console.error("Failed to mark all as read:", err);
+  }
+};
+
 
   return (
     <>
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-end z-50">
         <div className="bg-white w-80 sm:w-96 h-auto my-6 mr-6 rounded-2xl shadow-xl overflow-hidden">
 
-          {/* Header */}
           <div className="flex justify-between items-center px-5 py-4 border-b">
-            <h2 className="font-semibold text-lg">Notifications</h2>
+            <h2 className="font-semibold text-lg">Notifications <span className="text-red-500">({totalCount})</span></h2>
             <button onClick={onClose}>
               <i className="bx bx-x text-2xl text-gray-600 hover:text-gray-900"></i>
             </button>
           </div>
 
-          {/* Mark All as Read */}
           <div className="flex justify-end px-5 py-2 border-b gap-2">
             <button
               onClick={markAllAsRead}
@@ -103,7 +112,6 @@ const NotificationCard = ({ onClose }) => {
             </button>
           </div>
 
-          {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <p className="p-5 text-sm text-gray-500 text-center">Loading...</p>
@@ -130,11 +138,10 @@ const NotificationCard = ({ onClose }) => {
                       <p className="text-[10px] text-gray-400 mt-1">{note.time}</p>
                     </div>
 
-                    {/* Optional manual mark as read button */}
                     {!note.read && (
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // prevent opening details modal
+                          e.stopPropagation(); 
                           markAsRead(note.notificationID);
                         }}
                         className="ml-2 text-xs text-blue-600 hover:underline"

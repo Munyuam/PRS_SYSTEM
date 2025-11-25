@@ -58,8 +58,6 @@ function EditUser({ user, onClose, onUpdate }) {
     const username = user.username;
     const userID = user.userID
 
-    console.log("USer id is ", userID);
-
     if (confirmReset && username && userID) {
        
         const updatePassword = await fetch('/resetPassword', {

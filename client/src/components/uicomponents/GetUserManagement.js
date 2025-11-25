@@ -109,10 +109,9 @@ function GetUserManagement() {
   };
 
   return (
-    <div className="p-4 sm:p-6 w-full max-w-[1200px] mx-auto">
+    <div className="p-4 sm:p-6 w-full max-w-[1150px] md:ml-64">
       <h2 className="text-2xl sm:text-3xl font-bold mb-6">User Management</h2>
 
-      {/* Registration Form */}
       <div className="bg-white shadow rounded-xl p-4 sm:p-6 mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <input
@@ -172,9 +171,11 @@ function GetUserManagement() {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="bg-white shadow rounded-xl overflow-x-auto">
-        <table id="userTable" className="display w-full text-left border-collapse">
+      <table 
+        id="userTable" 
+        className="display !w-full text-left border-collapse !overflow-x-auto sm:overflow-x-scroll"
+      >
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-3">Username</th>

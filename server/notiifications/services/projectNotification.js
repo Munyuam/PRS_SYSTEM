@@ -12,9 +12,9 @@ const sendNotificationToDepartments = async (departmentID, title, message) => {
 
   try {
     const [result] = await pool.query(
-      `INSERT INTO notifications (targetDepartment, title, message, isRead, createdAt) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [departmentID, title, message, isRead, createdAt]
+      `INSERT INTO notifications (targetDepartment, title, message, createdAt) 
+       VALUES (?, ?, ?, ?)`,
+      [departmentID, title, message, createdAt]
     );
 
     if (result.affectedRows === 0) {

@@ -13,6 +13,7 @@ import updateProfile from "../data/dataservices/updateProfile.js";
 import changePassword from "../data/dataservices/changePassword.js";
 import resetPassword from "../data/dataservices/resetPassword.js";
 import getNotification from "../notiifications/services/getNotifications.js";
+import isRead from "../notiifications/services/markAsRead.js";
 import pool from '../data/dbconnector.js'
 
 const router = Router();
@@ -599,10 +600,13 @@ router.get('/getNotifications', async (req, res)=>{
     }
 
     const departmentID = req.session.departId
-    console.log("the found departmentID is: "+departmentID)
+    const userID = req.session.userid
+    console.log("the found departmentID is: "+departmentID+ "An user Id is: "+ userID)
 
     try {
-        const notifications = await getNotification(departmentID);
+        const notifications = await isRead.getUnreadNotifications(userID);
+
+        console.log(notifications);
 
         if(notifications.success){
         
@@ -611,7 +615,8 @@ router.get('/getNotifications', async (req, res)=>{
             return res.json({
                 success: true,
                 message: notifications.message,
-                notifications: notifications.notifications
+                notifications: notifications.data,
+                notificationCount: notifications.count
             })
         }else{
             return res.json({ success: false, message: notifications.message || "Failed to get notifications for this department" });
@@ -625,22 +630,52 @@ router.get('/getNotifications', async (req, res)=>{
 
 router.post('/markAsRead', async (req, res) => {
   const { notificationID } = req.body;
+  const userID = req.session.userid;
+
   try {
-    await pool.query("UPDATE notifications SET isRead = 1 WHERE ID = ?", [notificationID]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    const result = await isRead.markAsRead(notificationID, userID);
+
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message || "Notification not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Notification marked as read"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 });
 
-
 router.post('/markAllAsRead', async (req, res) => {
-  const { departmentID } = req.body;
+  const userID = req.session.userid;
+
   try {
-    await pool.query("UPDATE notifications SET isRead = 1 WHERE targetDepartment = ?", [departmentID]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    const result = await isRead.markAllAsRead(userID);
+
+    if (!result.success) {
+      return res.json({ success: false, message: result.message });
+    }
+
+    return res.json({
+      success: true,
+      message: "All notifications marked as read"
+    });
+
+  } catch (error) {
+    console.error("Error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
   }
 });
 
