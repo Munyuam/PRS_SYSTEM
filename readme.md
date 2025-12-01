@@ -20,17 +20,6 @@ PRS streamlines project management from start to finish, guiding projects throug
 - **Multi-Department Workflow** - Seamless collaboration across teams
 - **Real-time Status Tracking** - Live updates on project progress
 
-## Security
 
-- Password hashing with BCRYPT
-- TLS encryption for data protection
-- Role-based permissions (RBAC)
-- Secure REST API architecture
 
-## Support
 
-Contact us at **support@example.com** for any issues or questions.
-
----
-
-*Built for reliability and scalability - handling 1000+ concurrent projects with optimal performance.*
